@@ -592,7 +592,7 @@ async function doSearch() {
   if (ytBlocked) { $('searchMsg').textContent = 'Search only works on the online link.'; return; }
   $('searchMsg').textContent = 'Searching...'; $('results').innerHTML = '';
   const url = 'https://www.googleapis.com/youtube/v3/search?' + new URLSearchParams({
-    part: 'snippet', type: 'video', videoEmbeddable: 'true', videoSyndicated: 'true', maxResults: '12', q: term, key: YT_KEY
+    part: 'snippet', type: 'video', videoEmbeddable: 'true', videoSyndicated: 'true', videoCategoryId: '10', maxResults: '12', q: term, key: YT_KEY
   });
   try {
     const r = await fetch(url);
