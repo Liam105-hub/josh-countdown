@@ -862,6 +862,7 @@ function boot() {
   $('mono').textContent = u.toLowerCase().indexOf('joshturner') === 0 ? 'JT' : u.slice(0, 2).toUpperCase();
   splitWords($('head'), cfg.head); $('desc').textContent = cfg.desc;
   const st = $('stage'); st.classList.remove('intro'); void st.offsetWidth; st.classList.add('intro');
+  clearTimeout(st._settle); st._settle = setTimeout(() => settle(st), 3000);
   timeShown = '';
   remaining = cfg.t; render(remaining); start();
   if (cfg.music && cfg.tracks.length) startMusic(cfg.tracks);
@@ -966,6 +967,12 @@ document.addEventListener('keydown', e => {
 });
 
 /* ---------- animation helpers ---------- */
+// safety net: if the browser ever stalls animations (hidden tab, slow PC, old engine), force every intro animation to its end so nothing stays invisible
+const INTRO_ANIMS = ['cardIn', 'itemIn', 'letterUp', 'railIn', 'dropIn', 'fadeRight', 'wordUp', 'pillIn', 'timeIn', 'progIn', 'slideLeft', 'npIn', 'fadeOnly', 'rowIn'];
+function settle(root) {
+  if (!root || !root.getAnimations) return;
+  root.getAnimations({ subtree: true }).forEach(a => { if (INTRO_ANIMS.indexOf(a.animationName) > -1) { try { a.finish(); } catch (e) {} } });
+}
 function pageWipe(mid) {
   const b = document.createElement('div'), w = document.createElement('div');
   b.className = 'wipe b'; w.className = 'wipe w'; document.body.append(b, w);
@@ -1015,6 +1022,7 @@ function playSetupIntro() {
   document.querySelectorAll('.card').forEach(c => [...c.children].forEach((el, i) => el.style.setProperty('--i', i)));
   [...$('musicBody').children].forEach((el, i) => el.style.setProperty('--i', i));
   const su = $('setup'); su.classList.remove('setup-in'); void su.offsetWidth; su.classList.add('setup-in');
+  clearTimeout(su._settle); su._settle = setTimeout(() => settle(su), 2800);
   animateQueue = true; drawQueue();
 }
 // card spotlight follows the mouse
