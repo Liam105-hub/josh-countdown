@@ -189,12 +189,190 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: transparen
   #npTitle { font-size: 3vmin; } #npArtist { font-size: 2.2vmin; }
   #npCtl button { width: 7vmin; height: 7vmin; font-size: 2.4vmin; }
 }
+
+/* =====================================================================
+   ANIMATIONS (black & white, OBS friendly)
+   ===================================================================== */
+:root { --ease-out: cubic-bezier(.16,1,.3,1); --ease-io: cubic-bezier(.77,0,.18,1); --spring: cubic-bezier(.34,1.56,.64,1); }
+
+/* ---------- setup background ---------- */
+.bgfx { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.bgfx .grid { position: absolute; top: -80px; right: -80px; bottom: -80px; left: -80px;
+  background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 64px 64px; animation: gridPan 18s linear infinite;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 75%); }
+@keyframes gridPan { to { transform: translate(64px, 64px); } }
+.bgfx .orb { position: absolute; width: 46vmax; height: 46vmax; border-radius: 50%; filter: blur(90px); opacity: .09; background: #fff; }
+.bgfx .o1 { top: -18vmax; left: -10vmax; animation: orb1 22s ease-in-out infinite; }
+.bgfx .o2 { bottom: -22vmax; right: -12vmax; animation: orb2 26s ease-in-out infinite; opacity: .06; }
+@keyframes orb1 { 50% { transform: translate(18vmax, 10vmax) scale(1.15); } }
+@keyframes orb2 { 50% { transform: translate(-16vmax, -8vmax) scale(.9); } }
+.bgfx .scan { position: absolute; left: 0; right: 0; height: 160px; top: -160px; background: linear-gradient(transparent, rgba(255,255,255,.035), transparent); animation: scan 7s var(--ease-io) infinite; }
+@keyframes scan { 0% { top: -160px; } 60%, 100% { top: 110%; } }
+.cards { position: relative; z-index: 1; }
+
+/* ---------- setup intro ---------- */
+.card { opacity: 0; position: relative; overflow: hidden; }
+.setup-in .card { animation: cardIn .9s var(--ease-out) forwards; }
+.setup-in .card:nth-child(2) { animation-delay: .12s; }
+@keyframes cardIn { from { opacity: 0; transform: translateY(40px) scale(.97); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+.card > * { opacity: 0; }
+.setup-in .card > * { animation: itemIn .7s var(--ease-out) forwards; animation-delay: calc(.25s + var(--i, 0) * .055s); }
+@keyframes itemIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+#musicBody > * { opacity: 0; }
+.setup-in #musicBody > * { animation: itemIn .7s var(--ease-out) forwards; animation-delay: calc(.45s + var(--i, 0) * .045s); }
+
+/* split title letters */
+.splitL { display: inline-block; overflow: hidden; vertical-align: top; }
+.splitL span { display: inline-block; transform: translateY(105%); }
+.setup-in .splitL span { animation: letterUp .8s var(--ease-out) forwards; animation-delay: calc(.3s + var(--l) * .028s); }
+@keyframes letterUp { to { transform: none; } }
+
+/* mouse spotlight on cards */
+.card::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; opacity: 0; transition: opacity .4s;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.07), transparent 60%); }
+.card:hover::before { opacity: 1; }
+.card::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 14px; pointer-events: none; padding: 1px; opacity: 0; transition: opacity .4s;
+  background: radial-gradient(300px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.45), transparent 60%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.card:hover::after { opacity: 1; }
+
+/* ---------- buttons ---------- */
+.btn, .searchRow button, .dirs button, .seg button, .ib { position: relative; overflow: hidden; transition: transform .25s var(--spring), border-color .25s, color .25s, background .25s, box-shadow .3s; }
+.btn:active, .searchRow button:active, .dirs button:active, .seg button:active, .ib:active { transform: scale(.94); }
+.btn.ghost { z-index: 0; }
+.btn.ghost::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: #fff; transform: scaleX(0); transform-origin: right; transition: transform .45s var(--ease-io); z-index: -1; }
+.btn.ghost:hover::before { transform: scaleX(1); transform-origin: left; }
+.btn.ghost:hover { color: #000; }
+.btn.solid:hover, .searchRow button:hover { box-shadow: 0 0 0 4px rgba(255,255,255,.12), 0 10px 30px rgba(255,255,255,.12); transform: translateY(-2px); }
+.btn.solid::after, .searchRow button:not(.ghostBtn)::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(0,0,0,.18), transparent); transform: skewX(-20deg); }
+.btn.solid:hover::after, .searchRow button:not(.ghostBtn):hover::after { animation: sheen .8s var(--ease-out); }
+@keyframes sheen { to { left: 130%; } }
+.dirs button:hover, .seg button:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.4); color: #fff; }
+.dirs button.on, .seg button.on { animation: pop .45s var(--spring); box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
+@keyframes pop { 0% { transform: scale(.9); } 100% { transform: scale(1); } }
+.ib:hover { transform: scale(1.12); }
+.btn.copied { animation: copiedPop .6s var(--spring); }
+@keyframes copiedPop { 0% { transform: scale(1); } 40% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(255,255,255,.15); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+
+/* click ripple */
+.rip { position: absolute; border-radius: 50%; pointer-events: none; transform: scale(0); animation: rip .65s var(--ease-out) forwards; background: rgba(128,128,128,.35); mix-blend-mode: difference; }
+@keyframes rip { to { transform: scale(1); opacity: 0; } }
+
+/* inputs */
+.field input { transition: border-color .3s, box-shadow .3s, background .3s; }
+.field input:focus { box-shadow: 0 0 0 4px rgba(255,255,255,.07), inset 0 0 0 1px rgba(255,255,255,.25); background: #050505; }
+.field label, .lbl2 { transition: color .3s, letter-spacing .4s var(--ease-out); }
+.field:focus-within > label { color: #fff; letter-spacing: .24em; }
+
+/* switch */
+.switch::after { transition: left .45s var(--spring), background .3s, width .2s; }
+.switch:active::after { width: 22px; }
+.switch { transition: background .35s; }
+
+/* volume knob */
+.vs .kn { transition: box-shadow .2s, transform .2s var(--spring); }
+.vs.drag .kn { transform: scale(1.18); }
+.vs .fl { transition: width .08s linear; }
+
+/* lists */
+.item { transition: background .25s; }
+.item:hover { background: rgba(255,255,255,.035); }
+.item.anim { animation: rowIn .55s var(--ease-out) both; animation-delay: calc(var(--i, 0) * .05s); }
+@keyframes rowIn { from { opacity: 0; transform: translateX(-18px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+.item.fresh { animation: rowIn .55s var(--ease-out) both, flash 1.2s ease-out; }
+@keyframes flash { 0%, 30% { background: rgba(255,255,255,.14); } 100% { background: transparent; } }
+.item.leaving { animation: rowOut .3s var(--ease-io) forwards; }
+@keyframes rowOut { to { opacity: 0; transform: translateX(30px); height: 0; padding-top: 0; padding-bottom: 0; } }
+.item img { transition: transform .35s var(--ease-out); }
+.item:hover img { transform: scale(1.06); }
+
+/* messages */
+.msg.bump, #copied.bump { animation: msgIn .45s var(--ease-out) both; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+#linkBox { animation: msgIn .45s var(--ease-out) both; }
+#setupYtWrap.show { animation: cardIn .7s var(--ease-out) both; }
+
+/* page wipe (setup <-> preview) */
+.wipe { position: fixed; top: -50%; right: -50%; bottom: -50%; left: -50%; z-index: 300; pointer-events: none; }
+.wipe.w { background: #fff; } .wipe.b { background: #000; }
+
+/* ---------- overlay intro (runs when the countdown starts) ---------- */
+.intro .rail { animation: railIn 1s var(--ease-out) both; transform-origin: top; }
+@keyframes railIn { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+.intro .nav { animation: dropIn .9s var(--ease-out) .25s both; }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: none; } }
+.intro .eyebrow { animation: fadeRight .8s var(--ease-out) .35s both; }
+@keyframes fadeRight { from { opacity: 0; transform: translateX(-24px); letter-spacing: .9em; } to { opacity: 1; transform: none; } }
+.hw { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .08em; margin-bottom: -.08em; }
+.hw > span { display: inline-block; }
+.intro .hw > span { animation: wordUp 1s var(--ease-out) both; animation-delay: calc(.45s + var(--w) * .09s); }
+@keyframes wordUp { from { transform: translateY(110%) rotate(4deg); } to { transform: none; } }
+.intro .desc { animation: itemIn .9s var(--ease-out) .8s both; }
+.intro .pill { animation: pillIn 1s var(--ease-out) .95s both; }
+@keyframes pillIn { from { opacity: 0; clip-path: inset(0 100% 0 0 round 10vmin); } to { opacity: 1; clip-path: inset(0 0 0 0 round 10vmin); } }
+.pill svg { animation: nudge 1.6s ease-in-out infinite; }
+@keyframes nudge { 50% { transform: translateX(.8vmin); } }
+.intro .timer .lbl { animation: fadeRight .8s var(--ease-out) .6s both; }
+.intro #time { animation: timeIn 1.1s var(--ease-out) .5s both; }
+@keyframes timeIn { from { opacity: 0; transform: scale(1.15); filter: blur(2vmin); } to { opacity: 1; transform: none; filter: none; } }
+.intro .prog { animation: progIn 1.1s var(--ease-out) .9s both; }
+@keyframes progIn { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
+.intro .social { animation: itemIn 1s var(--ease-out) 1s both; }
+.intro .bottom { animation: itemIn 1s var(--ease-out) 1.1s both; }
+.intro .follow { animation: slideLeft 1s var(--ease-out) 1.1s both; }
+@keyframes slideLeft { from { transform: translateX(100%); } to { transform: none; } }
+#np.show { animation: npIn 1s var(--ease-out) both; }
+.intro #np.show { animation-delay: 1.2s; }
+@keyframes npIn { from { opacity: 0; transform: translateY(30px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+.intro .vignette { animation: fadeOnly 1.4s ease both; }
+@keyframes fadeOnly { from { opacity: 0; } to { opacity: 1; } }
+
+/* headline shimmer */
+.headline { position: relative; overflow: hidden; }
+.headline::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(11,11,12,.6), transparent); transform: translateX(-120%) skewX(-15deg); animation: shimmer 6s ease-in-out 2.4s infinite; }
+@keyframes shimmer { 0%, 55% { transform: translateX(-120%) skewX(-15deg); } 100% { transform: translateX(320%) skewX(-15deg); } }
+
+/* rolling timer digits */
+#time .dg { display: inline-block; position: relative; overflow: hidden; vertical-align: top; height: 1em; }
+#time .dg span { display: inline-block; }
+#time .dg span.out { position: absolute; left: 0; top: 0; animation: digOut .5s var(--ease-io) forwards; }
+#time .dg span.in { animation: digIn .5s var(--ease-io) both; }
+@keyframes digOut { to { transform: translateY(-100%); opacity: 0; filter: blur(.5vmin); } }
+@keyframes digIn { from { transform: translateY(100%); opacity: 0; filter: blur(.5vmin); } to { transform: none; opacity: 1; filter: none; } }
+#time .sep { animation: sepBlink 1s steps(1) infinite; }
+@keyframes sepBlink { 50% { opacity: .08; } }
+
+/* progress bar glowing tip */
+#fill { position: relative; }
+#fill::after { content: ""; position: absolute; left: -1px; top: 50%; width: 1.2vmin; height: 1.2vmin; margin-top: -.6vmin; border-radius: 50%; background: #fff; box-shadow: 0 0 1.6vmin 0.4vmin rgba(255,255,255,.8); }
+
+/* final 10: pulse rings */
+.ring { position: absolute; left: 50%; top: 50%; width: 40vmin; height: 40vmin; margin: -20vmin 0 0 -20vmin; border-radius: 50%; border: .25vmin solid rgba(255,255,255,.5); pointer-events: none; animation: ring 1s var(--ease-out) forwards; }
+@keyframes ring { from { transform: scale(.6); opacity: .9; } to { transform: scale(2.6); opacity: 0; } }
+.flashbg { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: #fff; pointer-events: none; animation: flashbg .5s ease-out forwards; }
+@keyframes flashbg { from { opacity: .12; } to { opacity: 0; } }
+
+/* ambient light leak */
+.leak { position: absolute; width: 70vmin; height: 70vmin; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.06), transparent 65%); top: 10%; left: 40%; pointer-events: none; animation: leak 16s ease-in-out infinite; }
+@keyframes leak { 33% { transform: translate(-25vmin, 15vmin); } 66% { transform: translate(20vmin, -10vmin); } }
+
+/* now playing title change */
+#npTitle.swap, #npArtist.swap { animation: itemIn .6s var(--ease-out); }
+.npBar { position: relative; overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bgfx, .leak { display: none; }
+  .card, .card > *, #musicBody > *, .splitL span { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
 </style>
 </head>
 <body>
 
 <!-- ============ SETUP ============ -->
 <div id="setup">
+ <div class="bgfx"><div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="scan"></div></div>
  <div class="cards">
   <div class="card">
     <h1>Stream Countdown</h1>
@@ -236,10 +414,12 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: transparen
       <div class="msg" id="searchMsg"></div>
       <div class="list" id="results"></div>
 
-      <div class="lbl2" style="margin:16px 0 8px">Or paste a YouTube link</div>
-      <div class="searchRow field">
-        <input id="link" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
-        <button id="addBtn">ADD</button>
+      <div id="pasteBox" style="display:none">
+        <div class="lbl2" style="margin:16px 0 8px">Paste a YouTube link</div>
+        <div class="searchRow field">
+          <input id="link" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+          <button id="addBtn">ADD</button>
+        </div>
       </div>
       <div class="msg" id="addMsg"></div>
       <div id="setupYtWrap"><div id="setupYt"></div></div>
@@ -253,7 +433,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: transparen
       <div class="row"><div class="field"><label>Order</label>
         <div class="seg" id="orderSeg"><button data-v="0" class="on">In order</button><button data-v="1">Shuffle</button></div></div></div>
 
-      <div class="warn" id="ytWarn">🎬 The music video plays inside the Now Playing box (YouTube needs the player to be visible). The music fades out when it hits 0. Some songs block playing on other sites, so they get a ✗ when you add them. Copyrighted songs can get a TikTok LIVE muted.</div>
+      <div class="warn" id="ytWarn">Copyrighted songs can get a TikTok LIVE muted.</div>
     </div>
   </div>
  </div>
@@ -262,6 +442,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: transparen
 <!-- ============ OVERLAY ============ -->
 <div id="stage">
   <div class="vignette"></div>
+  <div class="leak"></div>
 
   <div class="rail">
     <div class="logo" id="mono">JT</div>
@@ -399,11 +580,8 @@ $('musicSwitch').onclick = () => {
   $('musicSwitch').classList.toggle('on');
   $('musicBody').classList.toggle('off', !$('musicSwitch').classList.contains('on'));
 };
-if (ytBlocked) {
-  $('addMsg').innerHTML = framed
-    ? 'Music can\'t play in this preview. Use the online link on the PC.'
-    : '⚠️ YouTube won\'t play from a downloaded file. Open the <b style="color:#fff">online link</b> (GitHub Pages) to use music.';
-}
+function showPaste() { const pb = $('pasteBox'); if (pb.style.display === 'none') { pb.style.display = 'block'; pb.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 450, easing: 'cubic-bezier(.16,1,.3,1)' }); } }
+if (!YT_KEY) showPaste();
 const decode = str => { const t = document.createElement('textarea'); t.innerHTML = str; return t.value; };
 function openYouTube(term) { window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(term || 'music'), '_blank'); }
 if (!YT_KEY) $('searchBtn').textContent = 'YOUTUBE ↗';
@@ -411,7 +589,7 @@ let lastResults = [];
 async function doSearch() {
   const term = $('q').value.trim(); if (!term) return;
   if (!YT_KEY) { openYouTube(term); $('searchMsg').textContent = 'Opened YouTube. Copy the song link and paste it below.'; return; }
-  if (ytBlocked) { $('searchMsg').innerHTML = framed ? "Search doesn't work in this preview." : '⚠️ Open the <b style="color:#fff">online link</b> to search.'; return; }
+  if (ytBlocked) { $('searchMsg').textContent = 'Search only works on the online link.'; return; }
   $('searchMsg').textContent = 'Searching...'; $('results').innerHTML = '';
   const url = 'https://www.googleapis.com/youtube/v3/search?' + new URLSearchParams({
     part: 'snippet', type: 'video', videoEmbeddable: 'true', videoSyndicated: 'true', maxResults: '12', q: term, key: YT_KEY
@@ -421,9 +599,10 @@ async function doSearch() {
     const data = await r.json();
     if (!r.ok) {
       const reason = (data.error && data.error.errors && data.error.errors[0] && data.error.errors[0].reason) || '';
-      if (/quota/i.test(reason) || r.status === 429) $('searchMsg').innerHTML = 'Hit the 100 searches/day limit. It resets at midnight Pacific. <a href="#" id="fallbackYT" style="color:#fff">Search on YouTube instead ↗</a>';
-      else $('searchMsg').innerHTML = 'Search key problem (' + esc(reason || r.status) + '). <a href="#" id="fallbackYT" style="color:#fff">Search on YouTube instead ↗</a>';
+      if (/quota/i.test(reason) || r.status === 429) $('searchMsg').innerHTML = 'Hit the 100 searches/day limit. It resets at midnight Pacific. <a href="#" id="fallbackYT" style="color:#fff">Search on YouTube instead ↗</a> and paste the link below.';
+      else $('searchMsg').innerHTML = 'Search key problem (' + esc(reason || r.status) + '). <a href="#" id="fallbackYT" style="color:#fff">Search on YouTube instead ↗</a> and paste the link below.';
       const fb = $('fallbackYT'); if (fb) fb.onclick = e => { e.preventDefault(); openYouTube(term); };
+      showPaste();
       return;
     }
     lastResults = (data.items || []).filter(it => it.id && it.id.videoId).map(it => ({
@@ -431,7 +610,7 @@ async function doSearch() {
     }));
     $('searchMsg').textContent = lastResults.length ? '' : 'Nothing found. Try different words.';
     $('results').innerHTML = lastResults.map((t, i) => `
-      <div class="item">
+      <div class="item anim" style="--i:${i}">
         <img class="yt" src="${thumb(t.id)}" alt="">
         <div class="meta"><div class="t">${esc(t.title)}</div><div class="a">${esc(t.author)}</div></div>
         <button class="ib" data-test="${i}" title="Listen">▶</button>
@@ -496,7 +675,7 @@ async function addLink() {
   if (await addById(id)) $('link').value = '';
 }
 async function addById(id, known) {
-  if (ytBlocked) { $('addMsg').innerHTML = framed ? "Music can't play in this preview." : '⚠️ YouTube won\'t play from a downloaded file. Open the <b style="color:#fff">online link</b> to use music.'; return; }
+  if (ytBlocked) { $('addMsg').textContent = 'Music only works on the online link.'; return; }
   if (queue.some(x => x.id === id)) { $('addMsg').textContent = 'Already in the playlist.'; return false; }
   if (queue.length >= 20) { $('addMsg').textContent = 'Max 20 songs.'; return false; }
   $('addMsg').textContent = 'Checking the song...'; $('addBtn').disabled = true;
@@ -505,7 +684,7 @@ async function addById(id, known) {
   const r = await checkVideo(id);
   $('addBtn').disabled = false;
   if (!r.ok) { $('addMsg').textContent = '✗ Can\'t use that one: ' + (ERR[r.code] || 'error ' + r.code) + '. Try a different upload (lyric videos or "audio" uploads usually work).'; return false; }
-  queue.push({ id, title: r.title || (known && known.title) || 'YouTube video', author: r.author || (known && known.author) || '' });
+  queue.push({ id, title: r.title || (known && known.title) || 'YouTube video', author: r.author || (known && known.author) || '', _fresh: true });
   $('addMsg').textContent = '✓ Added';
   drawQueue();
   return true;
@@ -514,21 +693,28 @@ $('addBtn').onclick = addLink;
 $('link').onkeydown = e => { if (e.key === 'Enter') addLink(); };
 $('link').onpaste = () => setTimeout(addLink, 50);
 
+let animateQueue = false;
 function drawQueue() {
   $('qCount').textContent = queue.length + (queue.length === 1 ? ' song' : ' songs');
   $('queueEmpty').style.display = queue.length ? 'none' : 'block';
   $('queue').innerHTML = queue.map((t, i) => `
-    <div class="item">
+    <div class="item${t._fresh ? ' fresh' : (animateQueue ? ' anim' : '')}" style="--i:${i}">
       <img class="yt" src="${thumb(t.id)}" alt="">
       <div class="meta"><div class="t">${i + 1}. ${esc(t.title)}</div><div class="a">${esc(t.author)}</div></div>
       <button class="ib" data-play="${i}" title="Listen">▶</button>
       ${i > 0 ? `<button class="ib" data-up="${i}" title="Move up">↑</button>` : ''}
       <button class="ib" data-rm="${i}" title="Remove">✕</button>
     </div>`).join('');
+  queue.forEach(t => { delete t._fresh; });
+  animateQueue = false;
 }
 $('queue').onclick = e => {
   const rm = e.target.closest('[data-rm]'), up = e.target.closest('[data-up]'), pl = e.target.closest('[data-play]');
-  if (rm) queue.splice(+rm.dataset.rm, 1);
+  if (rm) {
+    const row = rm.closest('.item'); row.classList.add('leaving');
+    setTimeout(() => { queue.splice(+rm.dataset.rm, 1); drawQueue(); }, 280);
+    return;
+  }
   if (up) { const i = +up.dataset.up; const t = queue[i]; queue[i] = queue[i - 1]; queue[i - 1] = t; }
   if (pl && setupPlayer) { setupPlayer.unMute(); setupPlayer.setVolume(+$('vol').value); setupPlayer.loadVideoById(queue[+pl.dataset.play].id); return; }
   drawQueue();
@@ -560,6 +746,8 @@ $('copy').onclick = async () => {
   if (c.music) { p.set('yt', c.tracks.map(x => x.id).join(',')); p.set('vol', c.vol); if (c.shuffle) p.set('shuf', 1); }
   const url = location.href.split('?')[0].split('#')[0] + '?' + p.toString();
   $('linkBox').style.display = 'block'; $('linkBox').value = url;
+  const cb = $('copy'); cb.classList.remove('copied'); void cb.offsetWidth; cb.classList.add('copied');
+  const old = cb.dataset.label || (cb.dataset.label = cb.textContent); cb.textContent = 'COPIED ✓'; clearTimeout(cb._t); cb._t = setTimeout(() => { cb.textContent = old; }, 1600);
   try { await navigator.clipboard.writeText(url); $('copied').textContent = 'Copied ✓ paste it into your browser source'; }
   catch (err) { $('copied').textContent = 'Copy the link from the box'; }
 };
@@ -568,10 +756,9 @@ let previewMode = false;
 $('preview').onclick = () => {
   previewMode = true; cfg = readForm();
   if (setupPlayer && setupPlayer.pauseVideo) setupPlayer.pauseVideo();
-  $('setup').style.display = 'none'; $('backBtn').style.display = 'block';
-  boot();
+  pageWipe(() => { $('setup').style.display = 'none'; $('backBtn').style.display = 'block'; boot(); });
 };
-$('backBtn').onclick = () => resetToSetup();
+$('backBtn').onclick = () => pageWipe(() => { resetToSetup(); playSetupIntro(); });
 
 /* ---------- music player (overlay) ---------- */
 let yt = null, ytOk = false, order = [], pos = 0, musicOn = false, curVol = 0, fadeTimer = null, progTimer = null, errStreak = 0;
@@ -587,7 +774,9 @@ function fadeTo(target, ms, done) {
   }, 50);
 }
 function showMeta(t) {
-  $('npTitle').textContent = t.title || 'Loading...';
+  const nt = t.title || 'Loading...';
+  if ($('npTitle').textContent !== nt) ['npTitle', 'npArtist'].forEach(id => { const el = $(id); el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); });
+  $('npTitle').textContent = nt;
   $('npArtist').textContent = t.author || '';
   $('npFill').style.width = '0%';
 }
@@ -671,7 +860,9 @@ function boot() {
   $('userTop').textContent = '@' + u; $('userBot').textContent = '@' + u;
   $('liveUser').textContent = '@' + u.toUpperCase();
   $('mono').textContent = u.toLowerCase().indexOf('joshturner') === 0 ? 'JT' : u.slice(0, 2).toUpperCase();
-  $('head').textContent = cfg.head; $('desc').textContent = cfg.desc;
+  splitWords($('head'), cfg.head); $('desc').textContent = cfg.desc;
+  const st = $('stage'); st.classList.remove('intro'); void st.offsetWidth; st.classList.add('intro');
+  timeShown = '';
   remaining = cfg.t; render(remaining); start();
   if (cfg.music && cfg.tracks.length) startMusic(cfg.tracks);
 }
@@ -703,6 +894,7 @@ function render(secs) {
     const s = $('final').firstElementChild;
     s.textContent = whole;
     s.className = whole <= 3 ? 'fill' : '';
+    pulseRing(whole <= 3);
     s.animate([
       { opacity: 0, transform: 'scale(1.25)', filter: 'blur(2vmin)' },
       { opacity: 1, transform: 'scale(1)', filter: 'blur(0)', offset: .25 },
@@ -711,7 +903,7 @@ function render(secs) {
     ], { duration: 1000, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'forwards' });
   } else {
     const m = Math.floor(whole / 60), s = whole % 60;
-    $('time').innerHTML = `${two(m)}<span class="sep">:</span>${two(s)}`;
+    setTime(two(m) + two(s));
   }
 }
 
@@ -773,6 +965,75 @@ document.addEventListener('keydown', e => {
   if (k === 'escape' && previewMode) resetToSetup();
 });
 
+/* ---------- animation helpers ---------- */
+function pageWipe(mid) {
+  const b = document.createElement('div'), w = document.createElement('div');
+  b.className = 'wipe b'; w.className = 'wipe w'; document.body.append(b, w);
+  const sk = ' skewX(-14deg)', E = 'cubic-bezier(.77,0,.18,1)';
+  b.animate([{ transform: 'translateX(-140%)' + sk }, { transform: 'translateX(0)' + sk }], { duration: 480, easing: E, fill: 'forwards' });
+  w.animate([{ transform: 'translateX(-140%)' + sk }, { transform: 'translateX(0)' + sk }], { duration: 480, delay: 70, easing: E, fill: 'forwards' });
+  setTimeout(() => {
+    mid();
+    w.animate([{ transform: 'translateX(0)' + sk }, { transform: 'translateX(140%)' + sk }], { duration: 520, easing: E, fill: 'forwards' });
+    b.animate([{ transform: 'translateX(0)' + sk }, { transform: 'translateX(140%)' + sk }], { duration: 520, delay: 80, easing: E, fill: 'forwards' }).onfinish = () => { b.remove(); w.remove(); };
+  }, 600);
+}
+function splitWords(el, text) {
+  el.innerHTML = String(text).split(/(\s+)/).map((w, i) => /^\s+$/.test(w) ? w : `<span class="hw"><span style="--w:${i / 2}">${esc(w)}</span></span>`).join('');
+}
+let timeShown = '';
+function setTime(digits) {
+  const t = $('time');
+  if (!t.querySelector('.dg')) { t.innerHTML = '<span class="dg"></span><span class="dg"></span><span class="sep">:</span><span class="dg"></span><span class="dg"></span>'; timeShown = ''; }
+  const slots = t.querySelectorAll('.dg');
+  for (let i = 0; i < 4; i++) {
+    const ch = digits[i], slot = slots[i];
+    if (timeShown[i] === ch) continue;
+    const cur = slot.querySelector('span:not(.out)');
+    if (cur && timeShown) { cur.className = 'out'; setTimeout(() => cur.remove(), 520); }
+    else if (cur) cur.remove();
+    const n = document.createElement('span'); n.textContent = ch; if (timeShown) n.className = 'in';
+    slot.appendChild(n);
+  }
+  timeShown = digits;
+}
+function pulseRing(strong) {
+  const st = $('stage');
+  const r = document.createElement('div'); r.className = 'ring'; st.appendChild(r); setTimeout(() => r.remove(), 1100);
+  if (strong) {
+    const r2 = document.createElement('div'); r2.className = 'ring'; r2.style.animationDelay = '.15s'; st.appendChild(r2); setTimeout(() => r2.remove(), 1300);
+    const f = document.createElement('div'); f.className = 'flashbg'; st.appendChild(f); setTimeout(() => f.remove(), 600);
+  }
+}
+function splitTitle() {
+  const h = document.querySelector('.card h1'); if (!h || h.dataset.split) return;
+  h.dataset.split = 1; let l = 0;
+  h.innerHTML = h.textContent.split(' ').map(word => '<span class="splitL">' + [...word].map(c => `<span style="--l:${l++}">${esc(c)}</span>`).join('') + '</span>').join(' ');
+}
+function playSetupIntro() {
+  splitTitle();
+  document.querySelectorAll('.card').forEach(c => [...c.children].forEach((el, i) => el.style.setProperty('--i', i)));
+  [...$('musicBody').children].forEach((el, i) => el.style.setProperty('--i', i));
+  const su = $('setup'); su.classList.remove('setup-in'); void su.offsetWidth; su.classList.add('setup-in');
+  animateQueue = true; drawQueue();
+}
+// card spotlight follows the mouse
+document.querySelectorAll('.card').forEach(c => c.addEventListener('pointermove', e => {
+  const r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+}));
+// ripple on every setup button
+$('setup').addEventListener('pointerdown', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2;
+  const rp = document.createElement('span'); rp.className = 'rip';
+  rp.style.width = rp.style.height = d + 'px'; rp.style.left = (e.clientX - r.left - d / 2) + 'px'; rp.style.top = (e.clientY - r.top - d / 2) + 'px';
+  b.appendChild(rp); setTimeout(() => rp.remove(), 700);
+});
+// messages slide in when they change
+['addMsg', 'searchMsg', 'copied'].forEach(id => new MutationObserver(() => {
+  const el = $(id); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}).observe($(id), { childList: true, characterData: true, subtree: true }));
+
 /* ---------- route ---------- */
 if (q.get('go') === '1') {
   const ids = (q.get('yt') || '').split(',').filter(x => /^[A-Za-z0-9_-]{11}$/.test(x)).slice(0, 20);
@@ -790,6 +1051,7 @@ if (q.get('go') === '1') {
   boot();
 } else {
   $('setup').style.display = 'block';
+  playSetupIntro();
 }
 </script>
 </body>
